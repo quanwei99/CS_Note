@@ -91,39 +91,39 @@ aa.fun1(); // 错误，const 的实例对象不能访问非 const 的函数
 
 - 用 mutable 修饰成员变量
  
-```cpp
-class C
-{
-public:
-    void func(const int &p) const
+    ```cpp
+    class C
     {
-        i = p;
-    }
-private:
-    mutable int i;
-};
-```
+    public:
+        void func(const int &p) const
+        {
+            i = p;
+        }
+    private:
+        mutable int i;
+    };
+    ```
 
 - 造一个假的 this 去操作成员变量
 
-```cpp
-class Class1
-{
-public:
-    Class1();
-    ~Class1();
-    void func1() const;
+    ```cpp
+    class Class1
+    {
+    public:
+        Class1();
+        ~Class1();
+        void func1() const;
 
-    int _value;
-};
+        int _value;
+    };
 
-void Class1::func1() const {
-    // 声明一个指针指向 this 所指对象，并先将这个对象的常量性转型成const
-    Class1* const fakeClass1 = const_cast<Class1* const>(this);
-    // 使用造出来的 const 指针，去修改成员变量
-    fakeClass1->_value = 1;
-}
-```
+    void Class1::func1() const {
+        // 声明一个指针指向 this 所指对象，并先将这个对象的常量性转型成const
+        Class1* const fakeClass1 = const_cast<Class1* const>(this);
+        // 使用造出来的 const 指针，去修改成员变量
+        fakeClass1->_value = 1;
+    }
+    ```
 
 ## static
 
@@ -1012,7 +1012,7 @@ extern "C" 的主要作用就是为了能够正确实现 C++ 代码调用其他 
 - 汇编阶段：将编译阶段生成的汇编文件转化成机器码，生成可重定位目标文件
 - 链接阶段：将多个目标文件及所需要的库连接成最终的可执行目标文件
 
-![](.\img\编译系统.png)
+<img src=".\img\编译系统.png" style="zoom: 50%;" />
 
 <img src=".\img\cpp编译过程.jpg" style="zoom: 50%;" />
 
