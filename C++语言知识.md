@@ -1030,12 +1030,12 @@ extern "C" 的主要作用就是为了能够正确实现 C++ 代码调用其他 
 
 ## 内存管理和分配
 
-在 C++ 中，虚拟内存分为代码段、数据段、BSS段、堆区、文件映射区以及栈区六部分
+在 C++ 中，虚拟内存分为代码段、数据段、BSS 段、堆区、文件映射区以及栈区六部分
 
 - 静态区域：
   - 代码段：包括只读存储区和文本区，其中只读存储区存储字符串常量，文本区存储程序的机器代码
   - 数据段：存储程序中已初始化的全局变量和静态变量
-  - bss 段：存储未初始化的全局变量和静态变量（局部+全局），以及所有被初始化为0的全局变量和静态变量
+  - bss 段：存储未初始化的全局变量和静态变量（局部+全局），以及所有被初始化为 0 的全局变量和静态变量
 - 动态区域：
   - 堆区：调用 `new/malloc` 函数时在堆区动态分配内存，同时需要调用 `delete/free` 来手动释放申请的内存
   - 映射区：存储动态链接库以及调用 mmap 函数进行的文件映射
@@ -1079,7 +1079,7 @@ extern "C" 的主要作用就是为了能够正确实现 C++ 代码调用其他 
     auto it2 = m.begin();
     ```
 
-- `decltype` 关键字是为了解决 `auto` 关键字只能对变量进行类型推导的缺陷而出现的。它的用法和 `sizeof` 很相似
+  - `decltype` 关键字是为了解决 `auto` 关键字只能对变量进行类型推导的缺陷而出现的。它的用法和 `sizeof` 很相似
 
     ```cpp
     // 推演表达式作为变量的定义类型
@@ -1095,7 +1095,7 @@ extern "C" 的主要作用就是为了能够正确实现 C++ 代码调用其他 
     cout << typeid(decltype(GetMemory)).name() << endl;
     ```
 
-- `nullptr`：`nullptr` 是一种特殊类型的字面值，它可以被转换成任意其它的指针类型；而 NULL 一般被宏定义为0，在遇到重载时可能会出现问题
+- `nullptr`：`nullptr` 是一种特殊类型的字面值，它可以被转换成任意其它的指针类型；而 NULL 一般被宏定义为 0，在遇到重载时可能会出现问题
 
 - 区间迭代
 
@@ -1240,11 +1240,11 @@ auto f = [] (int a, int b) -> int
 |              |        list        |     双向链表      |                      插入、删除 O(1)                       |  无序  |   可重复   |                        不支持随机访问                        |
 |  容器适配器  |       stack        |   deque / list    |                  顶部插入、顶部删除 O(1)                   |  无序  |   可重复   | deque 或 list 封闭头端开口，不用 vector 的原因应该是容量大小有限制，扩容耗时 |
 |              |       queue        |   deque / list    |                  尾部插入、头部删除 O(1)                   |  无序  |   可重复   | deque 或 list 封闭头端开口，不用 vector 的原因应该是容量大小有限制，扩容耗时 |
-|              |   priority_queue   | vector + max-heap |                   插入、删除 $O(log_2n$)                   |  有序  |   可重复   |                   vector容器+heap处理规则                    |
-|   关联容器   |        set         |      红黑树       |                插入、删除、查找 $O(log_2n$)                |  有序  |  不可重复  |                                                              |
-|              |      multiset      |      红黑树       |                插入、删除、查找 $O(log_2n$)                |  有序  |   可重复   |                                                              |
-|              |        map         |      红黑树       |                插入、删除、查找 $O(log_2n$)                |  有序  |  不可重复  |                                                              |
-|              |      multimap      |      红黑树       |                插入、删除、查找 $O(log_2n$)                |  有序  |   可重复   |                                                              |
+|              |   priority_queue   | vector + max-heap |                   插入、删除 O(logn)                   |  有序  |   可重复   |                   vector容器+heap处理规则                    |
+|   关联容器   |        set         |      红黑树       |                插入、删除、查找 O(logn)                |  有序  |  不可重复  |                                                              |
+|              |      multiset      |      红黑树       |                插入、删除、查找 O(logn)                |  有序  |   可重复   |                                                              |
+|              |        map         |      红黑树       |                插入、删除、查找 O(logn)                |  有序  |  不可重复  |                                                              |
+|              |      multimap      |      红黑树       |                插入、删除、查找 O(logn)                |  有序  |   可重复   |                                                              |
 | 无序关联容器 |   unordered_set    |      哈希表       |             插入、删除、查找 O(1) ，最差 O(n)              |  无序  |  不可重复  |                                                              |
 |              | unordered_multiset |      哈希表       |             插入、删除、查找 O(1)， 最差 O(n)              |  无序  |   可重复   |                                                              |
 |              |   unordered_map    |      哈希表       |             插入、删除、查找 O(1) ，最差 O(n)              |  无序  |  不可重复  |                                                              |
@@ -1342,7 +1342,7 @@ map 和 set 都是 C++ 的关联容器，其底层实现都是红黑树 (RB-Tree
 哈希函数
 
 - 直接定制法
-  取关键字的某个线性函数为散列地址: hash (key) = A*Key +B
+  取关键字的某个线性函数为散列地址: hash (key) = A * Key + B
 
   优点: 简单,均匀,缺点: 需要提前知道关键字的分布情况
 
@@ -1388,67 +1388,66 @@ STL的分配器用于封装STL容器在内存管理上的底层细节
 
 1. 迭代器
 
-   Iterator（迭代器）模式又称 Cursor（游标）模式，用于提供一种方法顺序访问一个聚合对象中各个元素, 而又不需暴露该对象的内部表示。或者这样说可能更容易理解：Iterator 模式是运用于聚合对象的一种模式，通过运用该模式，使得我们可以在不知道对象内部表示的情况下，按照一定顺序（由 iterator 提供的方法）访问聚合对象中的各个元素。
+   iterator（迭代器）模式又称 Cursor（游标）模式，用于提供一种方法顺序访问一个聚合对象中各个元素, 而又不需暴露该对象的内部表示。或者这样说可能更容易理解：iterator 模式是运用于聚合对象的一种模式，通过运用该模式，使得我们可以在不知道对象内部表示的情况下，按照一定顺序（由 iterator 提供的方法）访问聚合对象中的各个元素。
 
-   由于 Iterator 模式的以上特性：与聚合对象耦合，在一定程度上限制了它的广泛运用，一般仅用于底层聚合支持类，如 STL 的 list、vector、stack 等容器类及 ostream_iterator 等扩展 iterator。
+   由于 iterator 模式的以上特性：与聚合对象耦合，在一定程度上限制了它的广泛运用，一般仅用于底层聚合支持类，如 STL 的 list、vector、stack 等容器类及 ostream_iterator 等扩展 iterator。
 
 2. 区别
 
-   迭代器不是指针，是类模板，表现的像指针。它只是模拟了指针的一些功能，通过重载了指针的一些操作符，->、*、++、--等。迭代器封装了指针，是一个“可遍历STL（ Standard Template Library）容器内全部或部分元素”的对象， 本质是封装了原生指针，是指针概念的一种提升（lift），提供了比指针更高级的行为，相当于一种智能指针，他可以根据不同类型的数据结构来实现不同的++，--等操作。
+   迭代器不是指针，是类模板，表现的像指针。它只是模拟了指针的一些功能，通过重载了指针的一些操作符、->、*、++、--等。迭代器封装了指针，是一个“可遍历 STL 容器内全部或部分元素”的对象， 本质是封装了原生指针，是指针概念的一种提升，提供了比指针更高级的行为，相当于一种智能指针，他可以根据不同类型的数据结构来实现不同的 ++, -- 等操作。
 
-   迭代器返回的是对象引用而不是对象的值，所以cout只能输出迭代器使用*取值后的值而不能直接输出其自身。
+   迭代器返回的是对象引用而不是对象的值，所以 cout 只能输出迭代器使用 * 取值后的值而不能直接输出其自身。
 
 3. 迭代器产生原因
 
-   Iterator类的访问方式就是把不同集合类的访问逻辑抽象出来，使得不用暴露集合内部的结构而达到循环遍历集合的效果。
+   iterator 类的访问方式就是把不同集合类的访问逻辑抽象出来，使得不用暴露集合内部的结构而达到循环遍历集合的效果。
 
 ## 迭代器的具体实现
 
-以`vector<int>`为例
+以 `vector<int>` 为例
 
 ```cpp
-template<typename T>
-class Vector
+template <typename T>
+class vector
 {
 public:
-    typedef T* Iterator;
-    //构造函数
-    Vector()
-        :_start(0)
-        , _finish(0)
-        , _endOfstorage(0)
-    {}
-    Vector(const T* str, size_t size)//构造size个元素
-        :_start(new T[size])
-        , _finish(_start)//（没放空间时）//_finish(_start+size)（放了空间）
-        , _endOfstorage(_start + size)
+    typedef T *Iterator;
+    // 构造函数
+    vector()
+        : _start(0), _finish(0), _endOfstorage(0)
     {
-        //memcpy(_start,str,sizeof(T)*size);
-        for (size_t i = 0; i<size; ++i)
+    }
+    vector(const T *str, size_t size)          // 构造 size 个元素
+        : _start(new T[size]), _finish(_start) //（没放空间时）// _finish(_start+size)（放了空间）
+          ,
+          _endOfstorage(_start + size)
+    {
+        // memcpy(_start,str,sizeof(T)*size);
+        for (size_t i = 0; i < size; ++i)
         {
-            *_finish++ = str[i];//_start[i]=str[i];
+            *_finish++ = str[i]; // _start[i]=str[i];
         }
     }
-    //拷贝构造函数
-    Vector(const Vector<T>& v)
+    // 拷贝构造函数
+    vector(const vector<T> &v)
     {
         size_t size = Size();
         _start = new T[size];
-        for (size_t i = 0; i<size; i++)
+        for (size_t i = 0; i < size; i++)
         {
             _start[i] = v._start[i];
         }
         _finish = _start + size;
         _endOfstroage = _finish;
     }
-    //赋值运算符重载
-    Vector& operator=(const Vector<T>& v)
+    // 赋值运算符重载
+    vector &operator=(const vector<T> &v)
     {
         size_t size = v.Size();
         if (this != &v)
         {
-            T*tmp = new T[size];
-            for (size_t i = 0; i<size; i++)//深拷贝
+            T *tmp = new T[size];
+            for (size_t i = 0; i < size; i++) //深拷贝
             {
                 tmp[i] = _start[i];
             }
@@ -1459,8 +1458,8 @@ public:
         }
         return *this;
     }
-    //析构函数
-    ~Vector()
+    // 析构函数
+    ~vector()
     {
         if (_start)
         {
@@ -1468,17 +1467,17 @@ public:
             _start = NULL;
         }
     }
-    //////////////////////Iterator////////////////////////////  
-    Iterator Begin()    //迭代器  
+    //////////////////////Iterator////////////////////////////
+    Iterator Begin() // 迭代器
     {
-        return _start; //Begin和_start类型一致 
+        return _start; // Begin 和 _start 类型一致
     }
     Iterator End()
     {
         return _finish;
     }
-    ///////////////////Modify//////////////////////////////// 
-    void PushBack(const T& data)
+    ///////////////////Modify////////////////////////////////
+    void PushBack(const T &data)
     {
         CheckCapacity();
         *_finish = data;
@@ -1488,12 +1487,12 @@ public:
     {
         --_finish;
     }
-    void Insert(size_t pos, const T& data)
+    void Insert(size_t pos, const T &data)
     {
         size_t size = Size();
         CheckCapacity();
-        assert(pos<size);
-        for (size_t i = size; i>pos; --i)
+        assert(pos < size);
+        for (size_t i = size; i > pos; --i)
         {
             _start[i] = _start[i - 1];
         }
@@ -1503,60 +1502,59 @@ public:
     void Erase(size_t pos)
     {
         size_t size = Size();
-        assert(pos<size)
-        for (size_t i = pos; i<size; i++)
+        assert(pos < size) for (size_t i = pos; i < size; i++)
         {
             _start[i] = start[i + 1];
         }
         --_finish;
     }
-	void Resize(size_t newSize, const T& data = T())//改变大小
+    void Resize(size_t newSize, const T &data = T()) // 改变大小
     {
-        size_t size = Size();//原来元素大小
-        size_t capacity = CapaCity();//原来容量
-        //1.newSize比size小
-        if (newSize<size)
+        size_t size = Size();         // 原来元素大小
+        size_t capacity = CapaCity(); // 原来容量
+        // 1.newSize 比 size 小
+        if (newSize < size)
         {
             _finish == _start + newSize;
         }
-        //2.newSize比size大，但比capacity小
-        else if (newSize>size&&newSize<capacity)
+        // 2.newSize 比 size 大，但比 capacity 小
+        else if (newSize > size && newSize < capacity)
         {
-            for (size_t i = size; i<newSize; i++)
+            for (size_t i = size; i < newSize; i++)
             {
-                //*finish++=data;
+                // *finish++=data;
                 _start[i] = data;
             }
             _finish = _start + newSize;
         }
-        //newSize比capacity大
+        // newSize 比 capacity 大
         else
         {
-            T* tmp = new T[newSize];//开辟新空间
-            for (size_t i = 0; i<size; i++)//搬移原空间的元素
+            T *tmp = new T[newSize];          // 开辟新空间
+            for (size_t i = 0; i < size; i++) // 搬移原空间的元素
             {
                 tmp[i] = _start[i];
             }
-            for (size_t i = size; i<newSize; i++)//把新增加的元素加进来
+            for (size_t i = size; i < newSize; i++) // 把新增加的元素加进来
             {
                 tmp[i] = data;
             }
-            delete[] _start;//释放旧空间
+            delete[] _start; // 释放旧空间
             _start = tmp;
             _finish = _start + newSize;
             _endOfstorage = _finish;
         }
     }
-    //////////////////capacity//////////////////////////// 
-    size_t Size()const
+    //////////////////capacity////////////////////////////
+    size_t Size() const
     {
         return _finish - _start;
     }
-    size_t CapaCity()const
+    size_t CapaCity() const
     {
         return _endOfstorage - _start;
     }
-    bool Empty()const//判空
+    bool Empty() const // 判空
     {
         if (_atart == _finish)
         {
@@ -1564,32 +1562,32 @@ public:
         }
         return false;
     }
-    //////////////Element Acess(元素访问)/////////////////////////// 
-    T& operator[](size_t index)//随机访问（下标）
+    //////////////Element Acess(元素访问)///////////////////////////
+    T &operator[](size_t index) // 随机访问（下标）
     {
         size_t capacity = CapaCity();
         assert(index <= capacity);
         return _start[index];
     }
-    const T& operator[](size_t index)const
+    const T &operator[](size_t index) const
     {
         size_t capacity = CapaCity();
         assert(index <= capacity);
         return _start[index];
     }
-    T& Front()
+    T &Front()
     {
         return *_start;
     }
-    const T& Front()const
+    const T &Front() const
     {
         return *_start;
     }
-    T& Back()
+    T &Back()
     {
         return *(_finish - 1);
     }
-    const T& Back()const
+    const T &Back() const
     {
         return *(_finish - 1);
     }
@@ -1598,16 +1596,16 @@ public:
         _finish = _start;
     }
 
-    friend ostream& operator<<(ostream& os, const Vector<T>& v)
+    friend ostream &operator<<(ostream &os, const vector<T> &v)
     {
-        for (size_t i = 0; i<v.Size(); i++)
+        for (size_t i = 0; i < v.Size(); i++)
         {
             os << v[i] << " ";
         }
         os << endl;
         return os;
     }
-    /*friend ostream& operator<<(ostream& os,  Vector<T>* v)//通过迭代器重载
+    /*friend ostream& operator<<(ostream& os,  Vector<T>* v) // 通过迭代器重载
     {
         Vector<int>::Iterator it = v.Begin();
             while(it!=v.End())
@@ -1626,17 +1624,17 @@ private:
         size_t newcapacity = 2 * capacity + 2;
         if (size >= capacity)
         {
-            //增容
-            T* tmp = new T[newcapacity];
-            //拷贝元素
-            //if(_start)
-            //memcpy(tmp,_start,size*sizeof(T));//浅拷贝（导致两个字符串公用同一块空间）但是效率高
-            //出了函数作用域，要销毁v，销毁旧空间时出现问题
-            for (size_t i = 0; i<size; i++)
+            // 增容
+            T *tmp = new T[newcapacity];
+            // 拷贝元素
+            // if(_start)
+            // memcpy(tmp,_start,size*sizeof(T));//浅拷贝（导致两个字符串公用同一块空间）但是效率高
+            // 出了函数作用域，要销毁v，销毁旧空间时出现问题
+            for (size_t i = 0; i < size; i++)
             {
                 tmp[i] = _start[i];
             }
-            delete[] _start;//释放旧空间
+            delete[] _start; // 释放旧空间
             _start = tmp;
             _finish = _start + size;
             _endOfstorage = _start + newcapacity;
@@ -1644,9 +1642,9 @@ private:
     }
 
 private:
-    T* _start;
-    T* _finish;
-    T* _endOfstorage;
+    T *_start;
+    T *_finish;
+    T *_endOfstorage;
 };
 ```
 
