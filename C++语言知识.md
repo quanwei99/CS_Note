@@ -36,23 +36,23 @@ C++11 新增关键字 (+10)：`alignas, alignof, char16_t, char32_t, constexpr, 
 ## const
 
 ```cpp
-// const 常量，不可修改，必须初始化
-const int a = 5; // int const a = 5;
-
-// 对常量的引用
-const int &r1 = 3;
-
 // 修饰指针所指向对象的 const 称为底层 const
 // 修饰指针本身的 const 称为顶层 const
+
+// const 常量，不可修改，必须初始化，顶层 const
+const int a = 5; // int const a = 5;
+
+// 对常量的引用，底层 const
+const int &r1 = 3;
 
 // 指向常量的指针，指向内容不可变，指向可变，底层 const
 const int *p = &a; // int const *p = &a;
 
 // 常量指针，指向内容可变，指向不可变，顶层 const
-int* const p = &a;
+int *const p = &a;
 
 // 指向常量的常指针，指向内容不可变，指向也不可变
-const int* const p = &a;
+const int *const p = &a;
 
 
 // 函数
@@ -489,7 +489,7 @@ public:
     int e = 10;
     const int f = static_cast<const int>(e);
 
-    // 除了底层const都可以
+    // 除了底层 const 都可以
     const int g = 20;
     int *h = static_cast<int*>(&g); // 编译错误，static_cast 不能转换掉 g 的 const 属性
 
@@ -525,13 +525,13 @@ public:
     // 用于多态类型的转换，可以在整个类层次结构中移动指针，包括向上转换、向下转换
     // 执行行运行时类型检查
     // 只适用于指针或引用
-    // 对不明确的指针的转换将失败（返回 nullptr ），但不引发异常
+    // 对不明确的指针的转换将失败（返回 nullptr），但不引发异常
     ```
 
 3. `const_cast`
 
     ```cpp
-    // 去除const限定
+    // 去除 const 限定，只改变底层 const
     #include <iostream>
     using namespace std; 
     void Printer (int* val,string seperator = "\n")
