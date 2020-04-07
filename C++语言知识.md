@@ -225,8 +225,6 @@ inline int A::doA() { return 0; }   // 需要显式内联
 缺点
 
 1. 代码膨胀。内联是以代码膨胀（复制）为代价，消除函数调用带来的开销。如果执行函数体内代码的时间，相比于函数调用的开销较大，那么效率的收获会很少。另一方面，每一处内联函数的调用都要复制代码，将使程序的总代码量增大，消耗更多的内存空间
-
-
 2. inline 函数无法随着函数库升级而升级。inline 函数的改变需要重新编译，不像 non-inline 可以直接链接
 3. 是否内联，程序员不可控。内联函数只是对编译器的建议，是否对函数内联，决定权在于编译器
 
@@ -405,13 +403,13 @@ int main(){
 ## 覆盖与隐藏
 
 - 覆盖指的是子类覆盖父类函数（被覆盖），特征：
-  - 分别位于子类和父类中
-  - 函数名字与参数都相同
-  - 父类的函数是虚函数 (virtual)
+    - 分别位于子类和父类中
+    - 函数名字与参数都相同
+    - 父类的函数是虚函数 (virtual)
 
 - 隐藏指的是子类隐藏了父类的函数（还存在），特征：
-  - 子类的函数与父类的名称相同，但是参数不同，父类函数被隐藏
-  - 子类函数与父类函数的名称相同，参数也相同，但是父类函数没有 virtual，父类函数被隐藏
+    - 子类的函数与父类的名称相同，但是参数不同，父类函数被隐藏
+    - 子类函数与父类函数的名称相同，参数也相同，但是父类函数没有 virtual，父类函数被隐藏
 
 ```cpp
 class father
@@ -477,6 +475,83 @@ public:
 1. `static_cast`
 
     ```cpp
+    #include <vector>
+    #include <iostream>
+    
+    struct B {
+        int m = 0;
+        void hello() const {
+            std::cout << "Hello world, this is B!\n";
+        }
+    };
+    struct D : B {
+        void hello() const {
+            std::cout << "Hello world, this is D!\n";
+        }
+    };
+    
+    enum class E { ONE = 1, TWO, THREE };
+    enum EU { ONE = 1, TWO, THREE };
+    
+    int main()
+    {
+        // 1: 初始化转换
+        int n = static_cast<int>(3.14); 
+        std::cout << "n = " << n << '\n';
+        std::vector<int> v = static_cast<std::vector<int>>(10);
+        std::cout << "v.size() = " << v.size() << '\n';
+    
+        // 2: 静态向下转型
+        D d;
+        B& br = d; // 通过隐式转换向上转型
+        br.hello();
+        D& another_d = static_cast<D&>(br); // 向下转型
+        another_d.hello();
+    
+        // 3: 左值到右值
+        std::vector<int> v2 = static_cast<std::vector<int>&&>(v);
+        std::cout << "after move, v.size() = " << v.size() << '\n';
+    
+        // 4: 弃值表达式
+        static_cast<void>(v2.size());
+    
+        // 5. 隐式转换的逆
+        void* nv = &n;
+        int* ni = static_cast<int*>(nv);
+        std::cout << "*ni = " << *ni << '\n';
+    
+        // 6. 数组到指针后随向上转型
+        D a[10];
+        B* dp = static_cast<B*>(a);
+    
+        // 7. 有作用域枚举到 int 或 float
+        E e = E::ONE;
+        int one = static_cast<int>(e);
+        std::cout << one << '\n';
+    
+        // 8. int 到枚举，枚举到另一枚举
+        E e2 = static_cast<E>(one);
+        EU eu = static_cast<EU>(e2);
+    
+        // 9. 指向成员指针向上转型
+        int D::*pm = &D::m;
+        std::cout << br.*static_cast<int B::*>(pm) << '\n';
+    
+        // 10. void* 到任何类型
+        void* voidp = &e;
+        std::vector<int>* p = static_cast<std::vector<int>*>(voidp);
+    }
+
+    // output
+    // n = 3
+    // v.size() = 10
+    // Hello world, this is B!
+    // Hello world, this is D!
+    // after move, v.size() = 0
+    // *ni = 3
+    // 1
+    // 0
+
     // 数值类型转型，char<->int
     char a = 'a';
     int b = static_cast<char>(a);
@@ -560,112 +635,97 @@ public:
 
 4. `reinterpret_cast`
 
-   几乎什么都可以转，比如将 int 转指针，可能会出问题，尽量少用
+    几乎什么都可以转，但是可能会出问题，尽量少用
 
 5. 为什么不使用 C 的强制转换？
 
-   C 的强制转换表面上看起来功能强大什么都能转，但是转化不够明确，不能进行错误检查，容易出错。
+    C 的强制转换表面上看起来功能强大什么都能转，但是转化不够明确，不能进行错误检查，容易出错。
 
 ## 智能指针
 
 1. `shared_ptr`
 
-   多个智能指针可以共享同一个对象，对象的最末一个拥有着有责任销毁对象，并清理与该对象相关的所有资源。用对象去管理了一个资源指针，同时用一个计数器去计算当前指针引用对象的个数；当管理指针的对象增加或者减少时，计算器当前值也同步加 1 或减 1 ，当最后一个指针对象被销毁时，计算器为1；此时，最后的指针对象被销毁（计算器抵达 0 ）的同时也把指针管理对象的指针进行 delete 操作
+    多个智能指针可以共享同一个对象，对象的最末一个拥有着有责任销毁对象，并清理与该对象相关的所有资源。用对象去管理了一个资源指针，同时用一个计数器去计算当前指针引用对象的个数；当管理指针的对象增加或者减少时，计算器当前值也同步 + 1 或 - 1 ，当最后一个指针对象被销毁时，计算器为 1；此时，最后的指针对象被销毁（计算器抵达 0）的同时也把指针管理对象的指针进行 delete 操作
 
     ```cpp
-    template <typename T>
-    class Shared_ptr
-    {
+    template<typename T>
+    class Shared_ptr {
     private:
-        size_t* m_count;
-        T* m_ptr;
+        size_t *m_count;
+        T *m_ptr;
 
     public:
         // 构造函数
         Shared_ptr() : m_ptr(nullptr), m_count(new size_t) {}
 
-        Shared_ptr(T *ptr) : m_ptr(ptr), m_count(new size_t)
-        {
+        explicit Shared_ptr(T *ptr) : m_ptr(ptr), m_count(new size_t) {
             cout << "空间申请：" << ptr << endl;
             *m_count = 1;
         }
 
         // 析构函数
-        ~Shared_ptr()
-        {
+        ~Shared_ptr() {
             --(*m_count);
-            if (*m_count == 0)
-            {
-            cout << "空间释放：" << m_ptr << endl;
-            delete m_ptr;
-            delete m_count;
-            m_ptr = nullptr;
-            m_count = nullptr;
+            if (*m_count == 0) {
+                cout << "空间释放：" << m_ptr << endl;
+                delete m_ptr;
+                delete m_count;
+                m_ptr = nullptr;
+                m_count = nullptr;
             }
         }
 
         // 拷贝构造函数
-        Shared_ptr(const Shared_ptr &ptr)
-        {
+        Shared_ptr(const Shared_ptr &ptr) {
             m_count = ptr.m_count;
             m_ptr = ptr.m_ptr;
             ++(*m_count);
         }
 
-        // 拷贝赋值运算符
-        void operator=(const Shared_ptr &ptr)
-        {
-            Shared_ptr(std::move(ptr));
-        }
-
         // 移动构造函数
-        Shared_ptr(Shared_ptr &&ptr) : m_ptr(ptr.m_ptr), m_count(ptr.m_count)
-        {
+        Shared_ptr(Shared_ptr &&ptr) noexcept : m_ptr(ptr.m_ptr), m_count(ptr.m_count) {
             ++(*m_count);
         }
 
-        // 移动赋值运算符
-        void operator=(Shared_ptr &&ptr)
-        {
+        // 拷贝赋值运算符
+        Shared_ptr &operator=(const Shared_ptr &ptr) {
             Shared_ptr(std::move(ptr));
+            return *this;
+        }
+
+        // 移动赋值运算符
+        Shared_ptr &operator=(Shared_ptr &&ptr)  noexcept {
+            Shared_ptr(std::move(ptr)).swap(*this);
+            return *this;
         }
 
         // 解引用运算符
-        T &operator*()
-        {
+        T &operator*() {
             return *m_ptr;
         }
 
         // 箭头运算符
-        T *operator->()
-        {
+        T *operator->() {
             return m_ptr;
-        }
-
-        // 重载布尔值操作
-        operator bool()
-        {
-            return m_ptr == nullptr;
         }
 
         // 返回存储的指针
-        T *get()
-        {
+        T *get() {
             return m_ptr;
         }
-        // 返回 shared_ptr 所指对象的引用计数
-        size_t use_count()
-        {
+
+        // 返回 Shared_ptr 所指对象的引用计数
+        size_t use_count() {
             return *m_count;
         }
-        // 检查所管理对象是否仅由当前 shared_ptr 的实例管理
-        bool unique()
-        {
+
+        // 检查所管理对象是否仅由当前 Shared_ptr 的实例管理
+        bool unique() {
             return *m_count == 1;
         }
+
         // 交换所管理的对象
-        void swap(Shared_ptr &ptr)
-        {
+        void swap(Shared_ptr &ptr) {
             std::swap(*this, ptr);
         }
     };
@@ -675,22 +735,18 @@ public:
     #include <iostream>
     #include <memory>
 
-    class Test
-    {
+    class Test {
     public:
-        Test()
-        {
+        Test() {
             std::cout << "Test()" << std::endl;
         }
 
-        ~Test()
-        {
+        ~Test() {
             std::cout << "~Test()" << std::endl;
         }
     };
 
-    int main()
-    {
+    int main() {
         std::shared_ptr<Test> p1 = std::make_shared<Test>();
         std::cout << "1 ref:" << p1.use_count() << std::endl;
         {
@@ -717,23 +773,20 @@ public:
     ```cpp
     #include <iostream>
     #include <memory>
+
     class B;
 
-    class A
-    {
+    class A {
     public:
-        A()
-        {
+        A() {
             std::cout << "class A : constructor" << std::endl;
         }
 
-        ~A()
-        {
+        ~A() {
             std::cout << "class A : destructor" << std::endl;
         }
 
-        void referB(std::shared_ptr<B> test_ptr)
-        {
+        void referB(std::shared_ptr<B> test_ptr) {
             _B_Ptr = test_ptr;
         }
 
@@ -741,28 +794,25 @@ public:
         std::shared_ptr<B> _B_Ptr;
     };
 
-    class B
-    {
+    class B {
     public:
-        B()
-        {
+        B() {
             std::cout << "class B : constructor" << std::endl;
         }
 
-        ~B()
-        {
+        ~B() {
             std::cout << "class B : destructor" << std::endl;
         }
 
-        void referA(std::shared_ptr<A> test_ptr)
-        {
+        void referA(std::shared_ptr<A> test_ptr) {
             _A_Ptr = test_ptr;
         }
+
+    private:
         std::shared_ptr<A> _A_Ptr;
     };
 
-    int main()
-    {
+    int main() {
         // test
         {
             std::shared_ptr<A> ptr_a = std::make_shared<A>(); // A 引用计算器为1
@@ -771,7 +821,7 @@ public:
             ptr_a->referB(ptr_b); // B 引用计算器加1
             ptr_b->referA(ptr_a); // A 引用计算器加1
         }
-        
+
         return 0;
     }
 
@@ -787,31 +837,25 @@ public:
 
     class B;
 
-    class A
-    {
+    class A {
     public:
-        A()
-        {
+        A() {
             std::cout << "class A : constructor" << std::endl;
         }
 
-        ~A()
-        {
+        ~A() {
             std::cout << "class A : destructor" << std::endl;
         }
 
-        void referB(std::shared_ptr<B> test_ptr)
-        {
+        void referB(const std::shared_ptr<B> &test_ptr) {
             _B_Ptr = test_ptr;
         }
 
-        void print_refer()
-        {
+        void print_refer() {
             std::cout << "refer B count : " << _B_Ptr.use_count() << std::endl;
         }
 
-        void test_refer()
-        {
+        void test_refer() {
             std::shared_ptr<B> tem_p = _B_Ptr.lock();
             std::cout << "refer B : " << tem_p.use_count() << std::endl;
         }
@@ -820,40 +864,34 @@ public:
         std::weak_ptr<B> _B_Ptr;
     };
 
-    class B
-    {
+    class B {
     public:
-        B()
-        {
+        B() {
             std::cout << "class B : constructor" << std::endl;
         }
 
-        ~B()
-        {
+        ~B() {
             std::cout << "class B : destructor" << std::endl;
         }
 
-        void referA(std::shared_ptr<A> test_ptr)
-        {
+        void referA(const std::shared_ptr<A> &test_ptr) {
             _A_Ptr = test_ptr;
         }
 
-        void print_refer()
-        {
+        void print_refer() {
             std::cout << "refer A count : " << _A_Ptr.use_count() << std::endl;
         }
 
-        void test_refer()
-        {
+        void test_refer() {
             std::shared_ptr<A> tem_p = _A_Ptr.lock();
             std::cout << "refer A : " << tem_p.use_count() << std::endl;
         }
 
+    private:
         std::weak_ptr<A> _A_Ptr;
     };
 
-    int main()
-    {
+    int main() {
         // test
         {
             std::shared_ptr<A> ptr_a = std::make_shared<A>(); // A 引用计算器为1
@@ -869,6 +907,7 @@ public:
 
         return 0;
     }
+
     // class A : constructor
     // class B : constructor
     // refer B : 2
@@ -888,40 +927,71 @@ public:
 
 2. `weak_ptr`
 
-   `weak_ptr` 允许你共享但不拥有某对象，一旦最末一个拥有该对象的智能指针失去了所有权，任何 `weak_ptr` 都会自动成空。因此，在 default 和 copy 构造函数之外，`weak_ptr` 只提供 “接受一个 `shared_ptr` 的构造函数。
+    `weak_ptr` 允许你共享但不拥有某对象，一旦最末一个拥有该对象的智能指针失去了所有权，任何 `weak_ptr` 都会自动成空。因此，在 default 和 copy 构造函数之外，`weak_ptr` 只提供 “接受一个 `shared_ptr` 的构造函数。
+
+    ```cpp
+    #include <iostream>
+    #include <memory>
+    
+    std::weak_ptr<int> gw;
+    
+    void f()
+    {
+        if (auto spt = gw.lock()) { // 使用之前必须复制到 shared_ptr
+            std::cout << *spt << "\n";
+        }
+        else {
+            std::cout << "gw is expired\n";
+        }
+    }
+    
+    int main()
+    {
+        {
+            auto sp = std::make_shared<int>(42);
+            gw = sp;
+    
+            f(); // 42
+        }
+    
+        f(); // gw is expired
+    }
+    ```
 
 3. `unique_ptr`
 
-   `unique_ptr` 是一种在异常时可以帮助避免资源泄漏的智能指针。采用独占式拥有，意味着可以确保一个对象和其相应的资源同一时间只被一个 pointer 拥有。一旦被销毁或 empty，或开始拥有另一个对象，先前拥有的那个对象就会被销毁，其任何相应资源亦会被释放。
+    `unique_ptr` 是一种在异常时可以帮助避免资源泄漏的智能指针。采用独占式拥有，意味着可以确保一个对象和其相应的资源同一时间只被一个 pointer 拥有。一旦被销毁或 empty，或开始拥有另一个对象，先前拥有的那个对象就会被销毁，其任何相应资源亦会被释放。
 
-   `unique_ptr` 用于取代 `auto_ptr`
+    `unique_ptr` 用于取代 `auto_ptr`
 
     ```cpp
-    int main(int argc, char *argv[])
-    {
+    #include <iostream>
+    #include <memory>
+
+    int main() {
         std::unique_ptr<int> u1(new int(1));
         std::cout << "u1 value : " << *u1 << '\n'
-                << "addredd : " << u1.get() << std::endl;
+                  << "address : " << u1.get() << std::endl;
         std::unique_ptr<int> u2 = move(u1);
         std::cout << "u2 value : " << *u2 << '\n'
-                << "addredd : " << u2.get() << std::endl;
+                  << "address : " << u2.get() << std::endl;
         std::cout << "u1 value : " << *u1 << '\n'
-                << "addredd : " << u1.get() << std::endl;
+                  << "address : " << u1.get() << std::endl;
         return 0;
     }
 
     // u1 value : 1
-    // addredd : 0xea1620
+    // address : 0xf91540
     // u2 value : 1
-    // addredd : 0xea1620
+    // address : 0xf91540
     // u1 value : error
     ```
 
 4. `auto_ptr`
 
-   实现对动态分配对象的自动释放
-   
-   被 C++11 弃用，原因是缺乏语言特性如 “针对构造和赋值” 的 `std::move` 语义，以及其他瑕疵。
+    实现对动态分配对象的自动释放
+
+    被 C++11 弃用，原因是缺乏语言特性如 “针对构造和赋值” 的 `std::move` 语义，以及其他瑕疵。
 
 ## 数组和指针的区别
 
@@ -995,11 +1065,11 @@ s3 = "abcd";       // 错误，s3 是数组名，相当于指针常量，指向�
 - class 这个关键字还用于定义模板参数，就像 typename。但关键字 struct 不用于定义模板参数
 - class 和 struct 在使用大括号 { } 上的区别
 
-  关于使用大括号初始化
+    关于使用大括号初始化
 
-  - class 和 struct 如果定义了构造函数的话，都不能用大括号进行初始化
-  - 如果没有定义构造函数，struct 可以用大括号初始化
-  - 如果没有定义构造函数，且所有成员变量全是 public 的话，class 可以用大括号初始化
+    - class 和 struct 如果定义了构造函数的话，都不能用大括号进行初始化
+    - 如果没有定义构造函数，struct 可以用大括号初始化
+    - 如果没有定义构造函数，且所有成员变量全是 public 的话，class 可以用大括号初始化
 
 ## extern "C" 的作用
 
@@ -1033,26 +1103,26 @@ extern "C" 的主要作用就是为了能够正确实现 C++ 代码调用其他 
 在 C++ 中，虚拟内存分为代码段、数据段、BSS 段、堆区、文件映射区以及栈区六部分
 
 - 静态区域：
-  - 代码段：包括只读存储区和文本区，其中只读存储区存储字符串常量，文本区存储程序的机器代码
-  - 数据段：存储程序中已初始化的全局变量和静态变量
-  - bss 段：存储未初始化的全局变量和静态变量（局部+全局），以及所有被初始化为 0 的全局变量和静态变量
+    - 代码段：包括只读存储区和文本区，其中只读存储区存储字符串常量，文本区存储程序的机器代码
+    - 数据段：存储程序中已初始化的全局变量和静态变量
+    - bss 段：存储未初始化的全局变量和静态变量（局部+全局），以及所有被初始化为 0 的全局变量和静态变量
 - 动态区域：
-  - 堆区：调用 new/malloc 函数时在堆区动态分配内存，同时需要调用 delete/free 来手动释放申请的内存
-  - 映射区：存储动态链接库以及调用 mmap 函数进行的文件映射
-  - 栈：使用栈空间存储函数的返回地址、参数、局部变量、返回值
+    - 堆区：调用 new/malloc 函数时在堆区动态分配内存，同时需要调用 delete/free 来手动释放申请的内存
+    - 映射区：存储动态链接库以及调用 mmap 函数进行的文件映射
+    - 栈：使用栈空间存储函数的返回地址、参数、局部变量、返回值
 
 ## include 头文件的顺序以及双引号 "" 和尖括号 <> 的区别
 
 - include头 文件的顺序：对于 include 的头文件来说，如果在文件 `a.h` 中声明一个在文件 `b.h` 中定义的变量，而不引用 `b.h`。那么要在 `a.c` 文件中引用 `b.h` 文件，并且要先引用 `b.h`，后引用 `a.h`，否则汇报变量类型未声明错误。
 
 - 双引号和尖括号的区别：编译器预处理阶段查找头文件的路径不一样。
-  - 对于使用双引号包含的头文件，查找头文件路径的顺序为：
-    1. 当前头文件目录
-    2. 编译器设置的头文件路径（编译器可使用-I显式指定搜索路径）
-    3. 系统变量 CPLUS_INCLUDE_PATH/C_INCLUDE_PATH 指定的头文件路径
-  - 对于使用尖括号包含的头文件，查找头文件的路径顺序为：
-    1. 编译器设置的头文件路径（编译器可使用-I显式指定搜索路径）
-    2. 系统变量 CPLUS_INCLUDE_PATH/C_INCLUDE_PATH 指定的头文件路径
+    - 对于使用双引号包含的头文件，查找头文件路径的顺序为：
+        1. 当前头文件目录
+        2. 编译器设置的头文件路径（编译器可使用-I显式指定搜索路径）
+        3. 系统变量 CPLUS_INCLUDE_PATH/C_INCLUDE_PATH 指定的头文件路径
+    - 对于使用尖括号包含的头文件，查找头文件的路径顺序为：
+        1. 编译器设置的头文件路径（编译器可使用-I显式指定搜索路径）
+        2. 系统变量 CPLUS_INCLUDE_PATH/C_INCLUDE_PATH 指定的头文件路径
 
 ## new 和 malloc 的区别
 
@@ -1069,31 +1139,31 @@ extern "C" 的主要作用就是为了能够正确实现 C++ 代码调用其他 
 
 - 类型推导
 
-  - `auto`关键字，编译器可以根据初始值自动推导出类型，但是不能用于函数传参以及数组类型的推导
+    - `auto`关键字，编译器可以根据初始值自动推导出类型，但是不能用于函数传参以及数组类型的推导
 
-    ```cpp
-    // 不使用auto需要写很长的迭代器的类型
-    map<string, string> m;
-    map<string, string>::iterator it1 = m.begin();
-    // 使用auto就很简单
-    auto it2 = m.begin();
-    ```
+        ```cpp
+        // 不使用auto需要写很长的迭代器的类型
+        map<string, string> m;
+        map<string, string>::iterator it1 = m.begin();
+        // 使用auto就很简单
+        auto it2 = m.begin();
+        ```
 
-  - `decltype` 关键字是为了解决 `auto` 关键字只能对变量进行类型推导的缺陷而出现的。它的用法和 `sizeof` 很相似
+    - `decltype` 关键字是为了解决 `auto` 关键字只能对变量进行类型推导的缺陷而出现的。它的用法和 `sizeof` 很相似
 
-    ```cpp
-    // 推演表达式作为变量的定义类型
-    int a = 1, b = 2;
-    decltype(a + b) c;
-    cout << typeid(c).name() << endl;
+        ```cpp
+        // 推演表达式作为变量的定义类型
+        int a = 1, b = 2;
+        decltype(a + b) c;
+        cout << typeid(c).name() << endl;
 
-    // 推演函数的返回值类型
-    void GetMemory(size_t size)
-    {
-        return malloc(size);
-    }
-    cout << typeid(decltype(GetMemory)).name() << endl;
-    ```
+        // 推演函数的返回值类型
+        void GetMemory(size_t size)
+        {
+            return malloc(size);
+        }
+        cout << typeid(decltype(GetMemory)).name() << endl;
+        ```
 
 - `nullptr`：一种特殊类型的字面值，它可以被转换成任意其它的指针类型；而 NULL 一般被宏定义为 0，在遇到重载时可能会出现问题
 
@@ -1342,27 +1412,30 @@ map 和 set 都是 C++ 的关联容器，其底层实现都是红黑树 (RB-Tree
 哈希函数
 
 - 直接定制法
-  
-取关键字的某个线性函数为散列地址: hash (key) = A * Key + B
-  
-优点: 简单,均匀,缺点: 需要提前知道关键字的分布情况
-  
-使用场景:适合查找小且连续的场景
-  
+
+    取关键字的某个线性函数为散列地址: hash (key) = A * Key + B
+
+    优点: 简单，均匀
+
+    缺点: 需要提前知道关键字的分布情况
+
+    使用场景:适合查找小且连续的场景
+
 - 除留余数法
 
-  设散列表中允许的地址数为 m，取一个不大于 m，但最接近或者等于 m 的质数 p（尽量选择一个素数）作为除数，按照哈希函数：Hash(key) = key % p (p <= m)，将关键码转换成哈希地址
+    设散列表中允许的地址数为 m，取一个不大于 m，但最接近或者等于 m 的质数 p（尽量选择一个素数）作为除数，按照哈希函数：Hash(key) = key % p (p <= m)，将关键码转换成哈希地址
 
 哈希冲突解决
 
 - 闭散列
 
-  开放定址法，当哈希表未满，在插入同义字时。可以把 key 值存放在下一个空位置(线性探测)
-  线性探测：从发生冲突的位置开始，依次向后探测，直到寻找下一个空位置为止。
+    开放定址法，当哈希表未满，在插入同义字时。可以把 key 值存放在下一个空位置(线性探测)
+
+    线性探测：从发生冲突的位置开始，依次向后探测，直到寻找下一个空位置为止。
 
 - 开散列
 
-  开散列法又叫链地址法(开链法)，首先对关键码集合用散列函数计算散列地址，具有相同地址的关键码归于同一子集合，每一个子集合称为一个桶，各个桶中的元素通过一个单链表链接起来，各链表的头结点存储在哈希表中。
+    开散列法又叫链地址法(开链法)，首先对关键码集合用散列函数计算散列地址，具有相同地址的关键码归于同一子集合，每一个子集合称为一个桶，各个桶中的元素通过一个单链表链接起来，各链表的头结点存储在哈希表中。
 
 ## allocator
 
@@ -1389,263 +1462,196 @@ STL的分配器用于封装STL容器在内存管理上的底层细节
 
 1. 迭代器
 
-   iterator（迭代器）模式又称 Cursor（游标）模式，用于提供一种方法顺序访问一个聚合对象中各个元素, 而又不需暴露该对象的内部表示。或者这样说可能更容易理解：iterator 模式是运用于聚合对象的一种模式，通过运用该模式，使得我们可以在不知道对象内部表示的情况下，按照一定顺序（由 iterator 提供的方法）访问聚合对象中的各个元素。
+    iterator（迭代器）模式又称 Cursor（游标）模式，用于提供一种方法顺序访问一个聚合对象中各个元素, 而又不需暴露该对象的内部表示。或者这样说可能更容易理解：iterator 模式是运用于聚合对象的一种模式，通过运用该模式，使得我们可以在不知道对象内部表示的情况下，按照一定顺序（由 iterator 提供的方法）访问聚合对象中的各个元素。
 
-   由于 iterator 模式的以上特性：与聚合对象耦合，在一定程度上限制了它的广泛运用，一般仅用于底层聚合支持类，如 STL 的 list、vector、stack 等容器类及 ostream_iterator 等扩展 iterator。
+    由于 iterator 模式的以上特性：与聚合对象耦合，在一定程度上限制了它的广泛运用，一般仅用于底层聚合支持类，如 STL 的 list、vector、stack 等容器类及 ostream_iterator 等扩展 iterator。
 
 2. 区别
 
-   迭代器不是指针，是类模板，表现的像指针。它只是模拟了指针的一些功能，通过重载了指针的一些操作符、->、*、++、--等。迭代器封装了指针，是一个“可遍历 STL 容器内全部或部分元素”的对象， 本质是封装了原生指针，是指针概念的一种提升，提供了比指针更高级的行为，相当于一种智能指针，他可以根据不同类型的数据结构来实现不同的 ++, -- 等操作。
+    迭代器不是指针，是类模板，表现的像指针。它只是模拟了指针的一些功能，通过重载了指针的一些操作符、->、*、++、--等。迭代器封装了指针，是一个“可遍历 STL 容器内全部或部分元素”的对象， 本质是封装了原生指针，是指针概念的一种提升，提供了比指针更高级的行为，相当于一种智能指针，他可以根据不同类型的数据结构来实现不同的 ++, -- 等操作。
 
-   迭代器返回的是对象引用而不是对象的值，所以 cout 只能输出迭代器使用 * 取值后的值而不能直接输出其自身。
+    迭代器返回的是对象引用而不是对象的值，所以 cout 只能输出迭代器使用 * 取值后的值而不能直接输出其自身。
 
 3. 迭代器产生原因
 
-   iterator 类的访问方式就是把不同集合类的访问逻辑抽象出来，使得不用暴露集合内部的结构而达到循环遍历集合的效果。
+    iterator 类的访问方式就是把不同集合类的访问逻辑抽象出来，使得不用暴露集合内部的结构而达到循环遍历集合的效果。
 
 ## 迭代器的具体实现
 
 以 `vector<int>` 为例
 
 ```cpp
-template <typename T>
-class vector
-{
-public:
-    typedef T *Iterator;
-    // 构造函数
-    vector()
-        : _start(0), _finish(0), _endOfstorage(0)
-    {
-    }
-    vector(const T *str, size_t size)          // 构造 size 个元素
-        : _start(new T[size]), _finish(_start) //（没放空间时）// _finish(_start+size)（放了空间）
-          ,
-          _endOfstorage(_start + size)
-    {
-        // memcpy(_start,str,sizeof(T)*size);
-        for (size_t i = 0; i < size; ++i)
-        {
-            *_finish++ = str[i]; // _start[i]=str[i];
-        }
-    }
-    // 拷贝构造函数
-    vector(const vector<T> &v)
-    {
-        size_t size = Size();
-        _start = new T[size];
-        for (size_t i = 0; i < size; i++)
-        {
-            _start[i] = v._start[i];
-        }
-        _finish = _start + size;
-        _endOfstroage = _finish;
-    }
-    // 赋值运算符重载
-    vector &operator=(const vector<T> &v)
-    {
-        size_t size = v.Size();
-        if (this != &v)
-        {
-            T *tmp = new T[size];
-            for (size_t i = 0; i < size; i++) //深拷贝
-            {
-                tmp[i] = _start[i];
-            }
-            delete[] _start;
-            _start = tmp;
-            _finish = _start + size;
-            _endOfstorge = _finish;
-        }
-        return *this;
-    }
-    // 析构函数
-    ~vector()
-    {
-        if (_start)
-        {
-            delete[] _start;
-            _start = NULL;
-        }
-    }
-    //////////////////////Iterator////////////////////////////
-    Iterator Begin() // 迭代器
-    {
-        return _start; // Begin 和 _start 类型一致
-    }
-    Iterator End()
-    {
-        return _finish;
-    }
-    ///////////////////Modify////////////////////////////////
-    void PushBack(const T &data)
-    {
-        CheckCapacity();
-        *_finish = data;
-        ++_finish;
-    }
-    void PopBack()
-    {
-        --_finish;
-    }
-    void Insert(size_t pos, const T &data)
-    {
-        size_t size = Size();
-        CheckCapacity();
-        assert(pos < size);
-        for (size_t i = size; i > pos; --i)
-        {
-            _start[i] = _start[i - 1];
-        }
-        _start[pos] = data;
-        ++_finish;
-    }
-    void Erase(size_t pos)
-    {
-        size_t size = Size();
-        assert(pos < size) for (size_t i = pos; i < size; i++)
-        {
-            _start[i] = start[i + 1];
-        }
-        --_finish;
-    }
-    void Resize(size_t newSize, const T &data = T()) // 改变大小
-    {
-        size_t size = Size();         // 原来元素大小
-        size_t capacity = CapaCity(); // 原来容量
-        // 1.newSize 比 size 小
-        if (newSize < size)
-        {
-            _finish == _start + newSize;
-        }
-        // 2.newSize 比 size 大，但比 capacity 小
-        else if (newSize > size && newSize < capacity)
-        {
-            for (size_t i = size; i < newSize; i++)
-            {
-                // *finish++=data;
-                _start[i] = data;
-            }
-            _finish = _start + newSize;
-        }
-        // newSize 比 capacity 大
-        else
-        {
-            T *tmp = new T[newSize];          // 开辟新空间
-            for (size_t i = 0; i < size; i++) // 搬移原空间的元素
-            {
-                tmp[i] = _start[i];
-            }
-            for (size_t i = size; i < newSize; i++) // 把新增加的元素加进来
-            {
-                tmp[i] = data;
-            }
-            delete[] _start; // 释放旧空间
-            _start = tmp;
-            _finish = _start + newSize;
-            _endOfstorage = _finish;
-        }
-    }
-    //////////////////capacity////////////////////////////
-    size_t Size() const
-    {
-        return _finish - _start;
-    }
-    size_t CapaCity() const
-    {
-        return _endOfstorage - _start;
-    }
-    bool Empty() const // 判空
-    {
-        if (_atart == _finish)
-        {
-            return true;
-        }
-        return false;
-    }
-    //////////////Element Acess(元素访问)///////////////////////////
-    T &operator[](size_t index) // 随机访问（下标）
-    {
-        size_t capacity = CapaCity();
-        assert(index <= capacity);
-        return _start[index];
-    }
-    const T &operator[](size_t index) const
-    {
-        size_t capacity = CapaCity();
-        assert(index <= capacity);
-        return _start[index];
-    }
-    T &Front()
-    {
-        return *_start;
-    }
-    const T &Front() const
-    {
-        return *_start;
-    }
-    T &Back()
-    {
-        return *(_finish - 1);
-    }
-    const T &Back() const
-    {
-        return *(_finish - 1);
-    }
-    void Clear()
-    {
-        _finish = _start;
-    }
-
-    friend ostream &operator<<(ostream &os, const vector<T> &v)
-    {
-        for (size_t i = 0; i < v.Size(); i++)
-        {
-            os << v[i] << " ";
-        }
-        os << endl;
-        return os;
-    }
-    /*friend ostream& operator<<(ostream& os,  Vector<T>* v) // 通过迭代器重载
-    {
-        Vector<int>::Iterator it = v.Begin();
-            while(it!=v.End())
-            {
-                cout<<*it<<" ";
-                ++it;
-            }
-            os << endl;
-            return os;
-    }*/
-private:
-    void CheckCapacity()
-    {
-        size_t size = Size();
-        size_t capacity = CapaCity();
-        size_t newcapacity = 2 * capacity + 2;
-        if (size >= capacity)
-        {
-            // 增容
-            T *tmp = new T[newcapacity];
-            // 拷贝元素
-            // if(_start)
-            // memcpy(tmp,_start,size*sizeof(T));//浅拷贝（导致两个字符串公用同一块空间）但是效率高
-            // 出了函数作用域，要销毁v，销毁旧空间时出现问题
-            for (size_t i = 0; i < size; i++)
-            {
-                tmp[i] = _start[i];
-            }
-            delete[] _start; // 释放旧空间
-            _start = tmp;
-            _finish = _start + size;
-            _endOfstorage = _start + newcapacity;
-        }
-    }
-
+template<class T>
+struct Vector {
 private:
     T *_start;
     T *_finish;
-    T *_endOfstorage;
+    T *_endOfStorage;
+public:
+    typedef T *Iterator;
+public:
+    // 构造函数
+    Vector() : _start(nullptr), _finish(nullptr), _endOfStorage(nullptr) {}
+
+    Vector(const T *array, size_t size) : _start(new T[size]), _finish(_start), _endOfStorage(_start + size) {
+        for (size_t i = 0; i < size; i++) {
+            *_finish++ = array[i];
+        }
+    }
+
+    //拷贝构造函数
+    Vector(const Vector<T> &v) {
+        size_t size = v.Size();
+        _start = new T[size];
+        for (size_t i = 0; i < size; i++) {
+            _start[i] = v._start[i];
+        }
+        _finish = _start + size;
+        _endOfStorage = _finish;
+    }
+
+    // 析构函数
+    ~Vector() {
+        if (_start) {
+            delete[] _start;
+            _start = nullptr;
+            _finish = nullptr;
+            _endOfStorage = nullptr;
+        }
+    }
+
+    Vector &operator=(const Vector<T> &s) {
+        size_t size = s.Size();
+        if (this != &s) {
+            T *tmp = new T[size];
+            for (size_t i = 0; i < size; i++) {
+                tmp[i] = s._start[i];
+            }
+            delete[] _start;
+            _start = tmp;
+            _finish = _start + size;
+            _endOfStorage = _start + size;
+        }
+        return *this;
+    }
+
+    //////////////Iterators/////////////////////////////////
+    Iterator Begin() {
+        return _start;
+    }
+
+    Iterator End() {
+        return _finish;
+    }
+
+    //////////////////Capacity////////////////////////////
+    bool Empty() const {
+        return _start == _finish;
+    }
+
+    size_t Size() const {
+        return _finish - _start;
+    }
+
+    size_t Capacity() const {
+        return _endOfStorage - _start;
+    }
+
+    //////////////////Modifiers////////////////////////////
+    void Clear() {
+        _start = _finish;
+    }
+
+    void Insert(size_t pos, const T &data) {
+        _CheckCapacity();
+        for (size_t i = Size(); i >= pos; i--) {
+            _start[i] = _start[i - 1];
+        }
+        _start[pos - 1] = data;
+        _finish++;
+    }
+
+    void Erase(size_t pos) {
+        for (size_t i = pos - 1; i < Size(); i++) {
+            _start[i] = _start[i + 1];
+        }
+        _finish--;
+    }
+
+    void PushBack(const T &data) {
+        _CheckCapacity();
+        *_finish++ = data;
+    }
+
+    void PopBack() {
+        _finish--;
+    }
+
+    void Resize(size_t newSize, const T &data = T()) {
+        size_t oldSize = Size();
+        if (newSize <= oldSize) {
+            _finish = _start + newSize;
+        } else if ((newSize > oldSize) && (newSize <= Capacity())) {
+            for (size_t i = oldSize; i < newSize; i++) {
+                _start[i] = data;
+            }
+            _finish = _start + newSize;
+        } else {
+            T *tmp = new T[newSize];
+            for (size_t i = 0; i < oldSize; i++) {
+                tmp[i] = _start[i];
+            }
+            for (size_t j = oldSize; j < newSize; j++) {
+                tmp[j] = data;
+            }
+            delete[] _start;
+            _start = tmp;
+            _finish = _start + newSize;
+            _endOfStorage = _finish;
+        }
+
+    }
+
+    //////////////Element access///////////////////////////
+    T &operator[](size_t index) {
+        return _start[index];
+    }
+
+    T &Front() {
+        return *_start;
+    }
+
+    T &Back() {
+        return *(_finish - 1);
+    }
+
+
+private:
+    void _CheckCapacity() {
+        size_t size = Size();
+        size_t capacity = Capacity();
+        size_t newCapacity = capacity * 2 + 3;
+        if (size >= capacity) {
+            //申请新空间
+            T *tmp = new T[newCapacity];
+            //拷贝元素
+            if (_start) {
+                for (size_t i = 0; i < size; i++) {
+                    tmp[i] = _start[i];
+                }
+            }
+            delete[] _start;
+            _start = tmp;
+            _finish = _start + size;
+            _endOfStorage = _start + newCapacity;
+        }
+    }
+
+    friend ostream &operator<<(ostream &os, const Vector<T> &v) {
+        for (size_t i = 0; i < v.Size(); ++i)
+            cout << v[i] << " ";
+        cout << endl;
+        return os;
+    }
 };
 ```
-
